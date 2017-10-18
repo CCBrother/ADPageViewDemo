@@ -39,9 +39,7 @@
         //显示广告页
         //后台在开发广告api的时候增加一个字段来判断是否启用广告
         if (self.isShowAdPage) {}
-        
         [ADPageView showAdPageView];
-        NSLog(@"显示广告");
     }
     return YES;
     

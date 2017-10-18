@@ -84,7 +84,7 @@ static ADPageView *adPageView = nil;
 - (void)showAdView {
     //先出沙盒读取路径
     NSString *filePath = [self getFilePathWithImageName:UserDefaultObjectForKey(adImageName)];
-    BOOL isExist = [[NSFileManager defaultManager] fileExistsAtPath:filePath];
+    BOOL isExist = [self isFileExistWithFilePath:filePath];
     
     if (isExist) {
         
@@ -107,7 +107,7 @@ static ADPageView *adPageView = nil;
     NSString *imageName = [imageUrl lastPathComponent];
     //拼接沙盒路径
     NSString *filePath = [self getFilePathWithImageName:imageName];
-    BOOL isExist = [[NSFileManager defaultManager] fileExistsAtPath:filePath];
+    BOOL isExist = [self isFileExistWithFilePath:filePath];;
     //如果图片不存在，则重新下载，删除老图片
     if (!isExist) {
         [self downLoadAdImageWithUrl:imageUrl imageName:imageName];
@@ -148,7 +148,12 @@ static ADPageView *adPageView = nil;
     [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
 
-
+//判断文件是否存在
+- (BOOL)isFileExistWithFilePath:(NSString *)filePath {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    BOOL isDirectory = FALSE;
+    return [fileManager fileExistsAtPath:filePath isDirectory:&isDirectory];
+}
 
 //根据图片名称生成路径
 - (NSString *)getFilePathWithImageName:(NSString *)imageName {
