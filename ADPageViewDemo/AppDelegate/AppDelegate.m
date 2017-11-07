@@ -29,7 +29,7 @@
     [self.window makeKeyAndVisible];
     
     //启动图延迟
-//    [NSThread sleepForTimeInterval:1.f];
+    [NSThread sleepForTimeInterval:1.f];
     
     //首先判断是否是第一次进入或者版本更新，如果是，启动引导页；如果不是，再判断是否需要显示广告。
     if ([Manager isFirstLaunch]) {

@@ -80,89 +80,49 @@ static ADPageView *adPageView = nil;
     return self;
 }
 
-//初始化展示广告View
+//展示广告
 - (void)showAdView {
-    //先出沙盒读取路径
-    NSString *filePath = [self getFilePathWithImageName:UserDefaultObjectForKey(adImageName)];
-    BOOL isExist = [self isFileExistWithFilePath:filePath];
     
-    if (isExist) {
-        
-        [self startTimer];
-        UIWindow *window = [UIApplication sharedApplication].keyWindow;
-        [window addSubview:self];
-        
-        [_skipBtn setTitle:[NSString stringWithFormat:@"跳过%d",showTime] forState:UIControlStateNormal];
-        _adView.image = [UIImage imageWithContentsOfFile:filePath];
-        _adView.contentMode = UIViewContentModeScaleAspectFill;
-        _adUrl = UserDefaultObjectForKey(adUrl);
+    SDWebImageManager *imageManager = [SDWebImageManager sharedManager];
+    //先从sd缓存读取，有则显示
+    NSString *imagePath = [[imageManager imageCache] defaultCachePathForKey:adImageName];
+    NSData * imageData = [NSData dataWithContentsOfFile:imagePath];
+    
+    if (imageData) {
+        [self adViewWithData:imageData];
     }
-    //无论沙盒中是否存在广告图片，都需要重新调用广告接口，判断广告是否更新
-    [self getAdImage];
-}
-
-- (void)getAdImage {
+    
     NSArray *imageArray = @[@"http://img.hb.aicdn.com/4cdbe766dc5a206da266a262ee87d9e5cf19eafb26a9d-xqBO2L_fw658", @"http://img.hb.aicdn.com/926c595bfb97b663077940b6598f63fa318dda092c174-hmqXI3_fw658", @"http://img.hb.aicdn.com/0e0d63ad054e9d48a3abb497c2c18e4b4293af4e134f6-CuXVbn_fw658", @"http://img.hb.aicdn.com/d534a50adbf8c0a6a886f28b7cc7148a723be6c42f511-9gvr0u_fw658"];
-    NSString *imageUrl = imageArray[arc4random() % imageArray.count];
-    NSString *imageName = [imageUrl lastPathComponent];
-    //拼接沙盒路径
-    NSString *filePath = [self getFilePathWithImageName:imageName];
-    BOOL isExist = [self isFileExistWithFilePath:filePath];;
-    //如果图片不存在，则重新下载，删除老图片
-    if (!isExist) {
-        [self downLoadAdImageWithUrl:imageUrl imageName:imageName];
-    }
-}
-
-//下载图片
-- (void)downLoadAdImageWithUrl:(NSString *)imageUrl imageName:(NSString *)imageName {
+    NSURL *url = [NSURL URLWithString:imageArray[arc4random() % imageArray.count]];
     
-    NSURL *url = [NSURL URLWithString:imageUrl];
-    
-    [[SDWebImageDownloader sharedDownloader] downloadImageWithURL:url options:SDWebImageDownloaderUseNSURLCache progress:nil completed:^(UIImage * _Nullable image, NSData * _Nullable data, NSError * _Nullable error, BOOL finished) {
-        //开始存储图片
-        NSString *filePath = [self getFilePathWithImageName:imageName];
-        NSLog(@"image:%@-----imageUrl:%@-----imageName:%@-----filePath:%@",image,imageUrl,imageName,filePath);
-        if ([UIImagePNGRepresentation(image) writeToFile:filePath atomically:YES]) {
-            [self deleteOldImage];
-            //存新图片和新广告链接
-            UserDefaultSetObjectForKey(imageName, adImageName);
-            UserDefaultSetObjectForKey(imageUrl, adUrl);
-            UserDefaultSynchronize;
+    SDWebImageDownloader *downManager = [SDWebImageDownloader sharedDownloader];
+    //不管缓存是否存在图片，都重新请求新的图片，删除旧的，保存新的图片
+    [imageManager cachedImageExistsForURL:url  completion:^(BOOL isInCache) {
+        //删除
+        [[SDImageCache sharedImageCache] removeImageForKey:adImageName withCompletion:nil];
+    }];
+    [downManager downloadImageWithURL:url options:SDWebImageDownloaderUseNSURLCache progress:nil completed:^(UIImage * _Nullable image, NSData * _Nullable data, NSError * _Nullable error, BOOL finished) {
+        //保存
+        if (image && finished) {
+            [[SDImageCache sharedImageCache] storeImage:image forKey:adImageName completion:nil];
         }
     }];
 }
 
-//删除旧照片
-- (void)deleteOldImage {
-    NSString *imageName = UserDefaultObjectForKey(adImageName);
-    if (imageName) {
-        NSString *filePath = [self getFilePathWithImageName:imageName];
-        [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
-    }
+- (void)adViewWithData:(NSData *)data {
+    [self startTimer];
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    [window addSubview:self];
+    
+    _adView.image = [UIImage imageWithData:data];
+    _adView.contentMode = UIViewContentModeScaleAspectFill;
 }
+
 
 //开始倒计时
 - (void)startTimer {
     _timeCount = showTime;
     [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-}
-
-//判断文件是否存在
-- (BOOL)isFileExistWithFilePath:(NSString *)filePath {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    BOOL isDirectory = FALSE;
-    return [fileManager fileExistsAtPath:filePath isDirectory:&isDirectory];
-}
-
-//根据图片名称生成路径
-- (NSString *)getFilePathWithImageName:(NSString *)imageName {
-    if (imageName) {
-        NSString *cachePaths = kPathCache;
-        NSString *imagePath = [cachePaths stringByAppendingPathComponent:imageName];
-        return imagePath;
-    }
-    return nil;
 }
 
 #pragma mark - Event response
