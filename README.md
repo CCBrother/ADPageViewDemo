@@ -67,45 +67,43 @@ if ([Manager isFirstLaunch]) {
     return self;
 }
 ```
-###### 3、广告页加载，先从沙盒查找，有，则显示，并下载更新，删除旧图片；没有，下载，保存。
+###### 3、广告页加载，先从SD缓存查找，有，则显示，并下载更新，删除旧图片；没有，下载，保存。
 ```
 - (void)showAdView {
-    //先出沙盒读取路径
-    NSString *filePath = [self getFilePathWithImageName:UserDefaultObjectForKey(adImageName)];
-    BOOL isExist = [[NSFileManager defaultManager] fileExistsAtPath:filePath];
     
-    if (isExist) {
-        
-        [self startTimer];
-        UIWindow *window = [UIApplication sharedApplication].keyWindow;
-        [window addSubview:self];
-        
-        [_skipBtn setTitle:[NSString stringWithFormat:@"跳过%d",showTime] forState:UIControlStateNormal];
-        _adView.image = [UIImage imageWithContentsOfFile:filePath];
-        _adView.contentMode = UIViewContentModeScaleAspectFill;
-        _adUrl = UserDefaultObjectForKey(adUrl);
+    SDWebImageManager *imageManager = [SDWebImageManager sharedManager];
+    //先从sd缓存读取，有则显示
+    NSString *imagePath = [[imageManager imageCache] defaultCachePathForKey:adImageName];
+    NSData * imageData = [NSData dataWithContentsOfFile:imagePath];
+    
+    if (imageData) {
+        [self adViewWithData:imageData];
     }
-    //无论沙盒中是否存在广告图片，都需要重新调用广告接口，判断广告是否更新
-    [self getAdImage];
-}
-```
-###### 4、图片下载，保存图片名和跳转的广告链接
-```
-- (void)downLoadAdImageWithUrl:(NSString *)imageUrl imageName:(NSString *)imageName {
     
-    NSURL *url = [NSURL URLWithString:imageUrl];
+    NSArray *imageArray = @[@"http://img.hb.aicdn.com/4cdbe766dc5a206da266a262ee87d9e5cf19eafb26a9d-xqBO2L_fw658", @"http://img.hb.aicdn.com/926c595bfb97b663077940b6598f63fa318dda092c174-hmqXI3_fw658", @"http://img.hb.aicdn.com/0e0d63ad054e9d48a3abb497c2c18e4b4293af4e134f6-CuXVbn_fw658", @"http://img.hb.aicdn.com/d534a50adbf8c0a6a886f28b7cc7148a723be6c42f511-9gvr0u_fw658"];
+    NSURL *url = [NSURL URLWithString:imageArray[arc4random() % imageArray.count]];
     
-    [[SDWebImageDownloader sharedDownloader] downloadImageWithURL:url options:SDWebImageDownloaderUseNSURLCache progress:nil completed:^(UIImage * _Nullable image, NSData * _Nullable data, NSError * _Nullable error, BOOL finished) {
-        //开始存储图片
-        NSString *filePath = [self getFilePathWithImageName:imageName];
-      
-        if ([UIImagePNGRepresentation(image) writeToFile:filePath atomically:YES]) {
-            [self deleteOldImage];
-            //存新图片和新广告链接
-            UserDefaultSetObjectForKey(imageName, adImageName);
-            UserDefaultSetObjectForKey(imageUrl, adUrl);
-            UserDefaultSynchronize;
-        }
-    }];
+    SDWebImageDownloader *downManager = [SDWebImageDownloader sharedDownloader];
+    //不管缓存是否存在图片，都重新请求新的图片，删除旧的，保存新的图片
+    [imageManager cachedImageExistsForURL:url  completion:^(BOOL isInCache) {
+            //删除
+            [[SDImageCache sharedImageCache] removeImageForKey:adImageName withCompletion:nil];
+        }];
+    [downManager downloadImageWithURL:url options:SDWebImageDownloaderUseNSURLCache progress:nil completed:^(UIImage * _Nullable image, NSData * _Nullable data, NSError * _Nullable error, BOOL finished) {
+            //保存
+            if (image && finished) {
+                [[SDImageCache sharedImageCache] storeImage:image forKey:adImageName completion:nil];
+            }
+        }];
 }
+
+- (void)adViewWithData:(NSData *)data {
+    [self startTimer];
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    [window addSubview:self];
+    
+    _adView.image = [UIImage imageWithData:data];
+    _adView.contentMode = UIViewContentModeScaleAspectFill;
+}
+
 ```
