@@ -1,8 +1,8 @@
 # ADPageViewDemo
 ## 效果图
 
-![gif1](https://github.com/CCBrother/ADPageViewDemo/blob/master/ad1.gif)
-![gif2](https://github.com/CCBrother/ADPageViewDemo/blob/master/ad2.gif)
+![gif1](https://github.com/CCBrother/ADPageViewDemo/blob/master/show1.gif)
+![gif2](https://github.com/CCBrother/ADPageViewDemo/blob/master/show2.gif)
 
 
 ## 一、广告页功能思路
