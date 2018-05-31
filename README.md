@@ -1,6 +1,7 @@
 # ADPageViewDemo
-#### 一、广告页功能思路
+## 一、广告页功能思路
 * APP第一次安装或版本更新时，有引导页的时候不展示广告，第二次开始展示广告
+
 * 创建一个展示广告的Imageview
 
 * 添加跳过广告的倒计时按钮
@@ -19,8 +20,8 @@
 
 * 添加统计：看广告详情有多少人观看，有多少人会跳过等
 
-#### 二、步骤
-###### 1、首先判断APP是否是第一次进入或者版本更新，如果是，启动引导页；如果不是，再判断是否需要显示广告。
+## 二、步骤
+#### 1、首先判断APP是否是第一次进入或者版本更新，如果是，启动引导页；如果不是，再判断是否需要显示广告。
 ```
 if ([Manager isFirstLaunch]) {
         //一句代码启动引导页
@@ -33,7 +34,7 @@ if ([Manager isFirstLaunch]) {
         [ADPageView showAdPageView];
    }
 ```
-###### 2、创建一个展示广告的Imageview和添加跳过广告的倒计时按钮
+#### 2、创建一个展示广告的Imageview和添加跳过广告的倒计时按钮
 ```
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
@@ -67,7 +68,7 @@ if ([Manager isFirstLaunch]) {
     return self;
 }
 ```
-###### 3、广告页加载，先从SD缓存查找，有，则显示，并下载更新，删除旧图片；没有，下载，保存。
+#### 3、广告页加载，先从SD缓存查找，有，则显示，并下载更新，删除旧图片；没有，下载，保存。
 ```
 - (void)showAdView {
     
