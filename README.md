@@ -1,4 +1,10 @@
 # ADPageViewDemo
+## 效果图
+
+![gif1](https://github.com/CCBrother/ADPageViewDemo/blob/master/ad1.gif)
+![gif2](https://github.com/CCBrother/ADPageViewDemo/blob/master/ad2.gif)
+
+
 ## 一、广告页功能思路
 * APP第一次安装或版本更新时，有引导页的时候不展示广告，第二次开始展示广告
 
