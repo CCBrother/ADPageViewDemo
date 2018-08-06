@@ -14,7 +14,7 @@
 
 @interface AppDelegate ()
 
-@property (nonatomic, assign) BOOL *isShowAdPage;
+@property (nonatomic, assign) BOOL isShowAdPage;
 
 @end
 
@@ -38,12 +38,11 @@
     }else {
         //显示广告页
         //后台在开发广告api的时候增加一个字段来判断是否启用广告
-        if (self.isShowAdPage) {}
-        [ADPageView showAdPageView];
+        self.isShowAdPage = YES;
+        if (self.isShowAdPage) {
+            [ADPageView showAdPageView];
+        }
     }
-    return YES;
-    
-    
     return YES;
 }
 
